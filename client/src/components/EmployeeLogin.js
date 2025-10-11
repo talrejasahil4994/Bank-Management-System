@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import Toast from './Toast';
 import useToast from '../hooks/useToast';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const EmployeeLogin = () => {
     const [username, setUserName] = useState('');
@@ -22,7 +23,7 @@ const EmployeeLogin = () => {
 
         try {
             // Try manager login first
-            let response = await fetch('http://localhost:5000/manager/login', {
+            let response = await fetch(getApiUrl(API_ENDPOINTS.MANAGER_LOGIN), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -42,7 +43,7 @@ const EmployeeLogin = () => {
             }
 
             // Try employee login if manager login failed
-            response = await fetch('http://localhost:5000/employee/login', {
+            response = await fetch(getApiUrl(API_ENDPOINTS.EMPLOYEE_LOGIN), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })

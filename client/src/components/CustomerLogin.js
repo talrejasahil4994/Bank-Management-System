@@ -4,6 +4,7 @@ import customer from '../images/customer.png';
 import Toast from './Toast';
 import useToast from '../hooks/useToast';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const CustomerLogin = () => {
     const [username, setUsername] = useState('');
@@ -21,7 +22,7 @@ const CustomerLogin = () => {
         showInfo('Logging in, please wait...', 2000);
 
         try {
-            const response = await fetch('http://localhost:5000/customer/login', {
+            const response = await fetch(getApiUrl(API_ENDPOINTS.CUSTOMER_LOGIN), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
