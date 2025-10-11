@@ -1,5 +1,9 @@
-// Load environment variables
-require('dotenv').config();
+// Load environment variables (optional for production)
+try {
+    require('dotenv').config();
+} catch (error) {
+    console.log('dotenv not found - using system environment variables');
+}
 
 const express = require('express');
 const app = express();

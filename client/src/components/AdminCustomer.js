@@ -30,10 +30,10 @@ const PostCustomer = ()=>{
     const [initialBalance, setInitialBalance] = useState('');
 
     // Show toast notification
-    const showToast = (message, type = 'success') => {
+    const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 4000);
-    };
+    }, []);
     
     // Search functionality
     const handleSearch = (term) => {
