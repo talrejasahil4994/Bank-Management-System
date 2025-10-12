@@ -1,0 +1,27 @@
+services:
+  # Server Service
+  - type: web
+    name: bank-management-server
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    # Add your database URL and other environment variables in the Render dashboard
+    
+  # Client Service  
+  - type: web
+    name: bank-management-client
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://bank-management-system-ivbu.onrender.com

@@ -1,0 +1,32 @@
+{
+  "name": "bank-management-system",
+  "version": "1.0.0",
+  "description": "Bank Management System - Full Stack Application",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "cd server && npm start",
+    "build": "cd server && npm install",
+    "dev": "cd server && npm run dev",
+    "postinstall": "cd server && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "bank",
+    "management",
+    "nodejs",
+    "express",
+    "postgresql",
+    "render"
+  ],
+  "author": "Talreja Sahil",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/talrejasahil4994/Bank-Management-System.git"
+  }
+}
