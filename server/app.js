@@ -24,6 +24,25 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Debug endpoint to test database connection
+app.get('/debug/db-test', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT NOW() as current_time');
+        res.json({
+            success: true,
+            message: 'Database connection successful',
+            current_time: result.rows[0].current_time
+        });
+    } catch (err) {
+        console.error('Database test error:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Database connection failed',
+            error: err.message
+        });
+    }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
@@ -46,15 +65,22 @@ app.get('/', (req, res) => {
 app.post('/manager/login', async(req,res)=>{
     try {
         const {username, password} = req.body;
+        console.log(`Manager login attempt - Username: ${username}`);
+        
         const query = await pool.query('SELECT * FROM manager_login WHERE username=$1 AND user_password=$2',[username, password]);
+        console.log(`Query result: ${query.rows.length} rows found`);
+        
         if(query.rows.length > 0) {
+            console.log('Manager login successful');
             res.status(200).json({ success: true, message: 'Manager login successful', user: query.rows[0], role: 'manager' });
         } else {
+            console.log('Invalid credentials - no matching user found');
             res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Manager login error:', err.message);
+        console.error('Error details:', err);
+        res.status(500).json({ success: false, message: 'Server error', error: err.message });
     }
 });
 
