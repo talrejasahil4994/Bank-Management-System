@@ -24,7 +24,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Debug endpoint to test database connection
+// Debug endpoint to test database connection and tables
 app.get('/debug/db-test', async (req, res) => {
     try {
         const result = await pool.query('SELECT NOW() as current_time');
@@ -38,6 +38,49 @@ app.get('/debug/db-test', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Database connection failed',
+            error: err.message
+        });
+    }
+});
+
+// Debug endpoint to check table structure
+app.get('/debug/tables', async (req, res) => {
+    try {
+        const tables = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            ORDER BY table_name
+        `);
+        
+        const tableInfo = {};
+        
+        for (const table of tables.rows) {
+            const columns = await pool.query(`
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns 
+                WHERE table_name = $1 AND table_schema = 'public'
+                ORDER BY ordinal_position
+            `, [table.table_name]);
+            
+            const count = await pool.query(`SELECT COUNT(*) as count FROM ${table.table_name}`);
+            
+            tableInfo[table.table_name] = {
+                columns: columns.rows,
+                record_count: parseInt(count.rows[0].count)
+            };
+        }
+        
+        res.json({
+            success: true,
+            message: 'Database structure retrieved',
+            tables: tableInfo
+        });
+    } catch (err) {
+        console.error('Database structure error:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve database structure',
             error: err.message
         });
     }
@@ -118,13 +161,40 @@ app.post('/customer/login', async(req,res)=>{
 
 app.post('/customer', async(req,res)=>{
     try {
-        console.log(req.body);
+        console.log('Customer creation request:', req.body);
         const {name,phone,email,house_no,city,zipcode,username,password} = req.body;
-        console.log(`${name}`)
-        const query= await pool.query('call insert_into_customer($1,$2,$3,$4,$5,$6,$7,$8)',[name,phone,email,house_no,city,zipcode,username,password]);
-        res.status(200).json({ success: true, message: 'Customer added successfully' });
+        
+        // Validate required fields
+        if (!name || !email || !username || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email, username and password are required' });
+        }
+        
+        console.log(`Adding customer: ${name}`);
+        
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_customer($1,$2,$3,$4,$5,$6,$7,$8)',[name,phone,email,house_no,city,zipcode,username,password]);
+            console.log('Customer added via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT
+            query = await pool.query(
+                'INSERT INTO customer (name, phone, email, house_no, city, zipcode, username, password, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE) RETURNING *',
+                [name, phone, email, house_no, city, zipcode, username, password]
+            );
+            console.log('Customer added via direct INSERT');
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Customer added successfully',
+            customer: query.rows?.[0] || { name, username }
+        });
     } catch (err) {
-        console.error(err.message);
+        console.error('Customer creation error:', err.message);
+        console.error('Full error:', err);
         res.status(500).json({ success: false, message: 'Failed to add customer', error: err.message });
     }
 });
@@ -147,11 +217,40 @@ app.delete('/customer/:customer_id',async(req,res)=>{
 // Manager endpoints
 app.post('/manager', async(req,res)=>{
     try {
+        console.log('Manager creation request:', req.body);
         const {username, user_password, full_name, email} = req.body;
-        const query = await pool.query('call insert_into_manager($1,$2,$3,$4)',[username, user_password, full_name, email]);
-        res.status(200).json({ success: true, message: 'Manager added successfully' });
+        
+        // Validate required fields
+        if (!username || !user_password || !full_name) {
+            return res.status(400).json({ success: false, message: 'Username, password and full name are required' });
+        }
+        
+        console.log(`Adding manager: ${full_name}`);
+        
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_manager($1,$2,$3,$4)',[username, user_password, full_name, email]);
+            console.log('Manager added via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT
+            query = await pool.query(
+                'INSERT INTO manager_login (username, user_password, full_name, email, created_at) VALUES ($1, $2, $3, $4, CURRENT_DATE) RETURNING *',
+                [username, user_password, full_name, email]
+            );
+            console.log('Manager added via direct INSERT');
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Manager added successfully',
+            manager: query.rows?.[0] || { username, full_name }
+        });
     } catch (err) {
-        console.error(err.message);
+        console.error('Manager creation error:', err.message);
+        console.error('Full error:', err);
         res.status(500).json({ success: false, message: 'Failed to add manager', error: err.message });
     }
 });
@@ -179,11 +278,40 @@ app.delete('/manager/:manager_id', async(req,res) =>{
 
 app.post('/employee', async(req,res)=>{
     try {
+        console.log('Employee creation request:', req.body);
         const {username, user_password, full_name, email} = req.body;
-        const query = await pool.query('call insert_into_emp_login($1,$2,$3,$4)',[username, user_password, full_name, email]);
-        res.status(200).json({ success: true, message: 'Employee added successfully' });
+        
+        // Validate required fields
+        if (!username || !user_password || !full_name) {
+            return res.status(400).json({ success: false, message: 'Username, password and full name are required' });
+        }
+        
+        console.log(`Adding employee: ${full_name}`);
+        
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_emp_login($1,$2,$3,$4)',[username, user_password, full_name, email]);
+            console.log('Employee added via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT
+            query = await pool.query(
+                'INSERT INTO emp_login (username, user_password, full_name, email, created_at) VALUES ($1, $2, $3, $4, CURRENT_DATE) RETURNING *',
+                [username, user_password, full_name, email]
+            );
+            console.log('Employee added via direct INSERT');
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Employee added successfully',
+            employee: query.rows?.[0] || { username, full_name }
+        });
     } catch (err) {
-        console.error(err.message);
+        console.error('Employee creation error:', err.message);
+        console.error('Full error:', err);
         res.status(500).json({ success: false, message: 'Failed to add employee', error: err.message });
     }
 });
@@ -201,12 +329,40 @@ app.delete('/employee/:username', async(req,res) =>{
 
 app.post('/accounts',async(req,res)=>{
     try {
+        console.log('Account creation request:', req.body);
         const {customer_id,current_balance}=req.body;
-        console.log(req.body);
-        const query = await pool.query('call insert_into_accounts($1,$2)',[customer_id,current_balance]);
-        res.status(200).json({ success: true, message: 'Account created successfully' });
+        
+        // Validate required fields
+        if (!customer_id || current_balance === undefined || current_balance < 0) {
+            return res.status(400).json({ success: false, message: 'Valid customer_id and current_balance (>= 0) are required' });
+        }
+        
+        console.log(`Creating account for customer ${customer_id} with balance ${current_balance}`);
+        
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_accounts($1,$2)',[customer_id,current_balance]);
+            console.log('Account created via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT
+            query = await pool.query(
+                'INSERT INTO accounts (customer_id, current_balance, date_opened, account_type, status) VALUES ($1, $2, CURRENT_DATE, $3, $4) RETURNING *',
+                [customer_id, current_balance, 'SAVINGS', 'ACTIVE']
+            );
+            console.log('Account created via direct INSERT');
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Account created successfully',
+            account: query.rows?.[0] || { customer_id, current_balance }
+        });
     } catch (err) {
-        console.error(err.message);
+        console.error('Account creation error:', err.message);
+        console.error('Full error:', err);
         res.status(500).json({ success: false, message: 'Failed to create account', error: err.message });
     }
 });
@@ -247,12 +403,40 @@ app.get('/accounts/:customer_id', async(req,res)=>{
 });
 app.post('/branch',async(req,res)=>{
     try {
-        console.log(req.body);
+        console.log('Branch creation request:', req.body);
         const {name,house_no,city,zip_code} = req.body;
-        const query = await pool.query('call insert_into_branch($1,$2,$3,$4)',[name,house_no,city,zip_code]);
-        res.status(200).json({ success: true, message: 'Branch added successfully' });
+        
+        // Validate required fields
+        if (!name || !city) {
+            return res.status(400).json({ success: false, message: 'Branch name and city are required' });
+        }
+        
+        console.log(`Adding branch: ${name} in ${city}`);
+        
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_branch($1,$2,$3,$4)',[name,house_no,city,zip_code]);
+            console.log('Branch added via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT
+            query = await pool.query(
+                'INSERT INTO branch (name, house_no, city, zip_code, created_at) VALUES ($1, $2, $3, $4, CURRENT_DATE) RETURNING *',
+                [name, house_no, city, zip_code]
+            );
+            console.log('Branch added via direct INSERT');
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Branch added successfully',
+            branch: query.rows?.[0] || { name, city }
+        });
     } catch (err) {
-        console.error(err.message);
+        console.error('Branch creation error:', err.message);
+        console.error('Full error:', err);
         res.status(500).json({ success: false, message: 'Failed to add branch', error: err.message });
     }
 });
@@ -290,8 +474,48 @@ app.post('/transaction',async(req,res)=>{
             return res.status(400).json({ success: false, message: 'Invalid action. Must be Deposit or Withdraw' });
         }
         
-        const query = await pool.query('call insert_into_transaction($1,$2,$3,$4)',[account_id,branch_id,amount,action]);
-        res.status(200).json({ success: true, message: `${action} of ${amount} completed successfully` });
+        let query;
+        try {
+            // Try stored procedure first
+            query = await pool.query('CALL insert_into_transaction($1,$2,$3,$4)',[account_id,branch_id,amount,action]);
+            console.log('Transaction created via stored procedure');
+        } catch (procError) {
+            console.log('Stored procedure failed, trying direct INSERT:', procError.message);
+            
+            // Fallback to direct INSERT with account balance update
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+                
+                // Insert transaction record
+                const transactionQuery = await client.query(
+                    'INSERT INTO "transaction" (account_id, branch_id, amount, action, transaction_date, processed_by) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5) RETURNING *',
+                    [account_id, branch_id, amount, action, 'SYSTEM']
+                );
+                
+                // Update account balance
+                const balanceChange = action === 'Deposit' ? parseFloat(amount) : -parseFloat(amount);
+                await client.query(
+                    'UPDATE accounts SET current_balance = current_balance + $1 WHERE account_id = $2',
+                    [balanceChange, account_id]
+                );
+                
+                await client.query('COMMIT');
+                query = transactionQuery;
+                console.log('Transaction created via direct INSERT with balance update');
+            } catch (transError) {
+                await client.query('ROLLBACK');
+                throw transError;
+            } finally {
+                client.release();
+            }
+        }
+        
+        res.status(201).json({ 
+            success: true, 
+            message: `${action} of $${amount} completed successfully`,
+            transaction: query.rows?.[0] || { account_id, branch_id, amount, action }
+        });
     } catch (error) {
         console.error('Transaction error:', error);
         res.status(500).json({ success: false, message: 'Transaction failed', error: error.message });
