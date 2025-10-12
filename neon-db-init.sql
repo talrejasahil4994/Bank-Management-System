@@ -114,21 +114,21 @@ VALUES(customer_id, current_balance, CURRENT_DATE, 'SAVINGS', 'ACTIVE');
 $$;
 
 CREATE OR REPLACE PROCEDURE insert_into_transaction(
-    account_id INTEGER, branch_id INTEGER, 
-    amount DECIMAL, action VARCHAR
+    p_account_id INTEGER, p_branch_id INTEGER, 
+    p_amount DECIMAL, p_action VARCHAR
 )
-LANGUAGE SQL AS
+LANGUAGE plpgsql AS
 $$
 BEGIN
     -- Insert transaction record
     INSERT INTO "transaction"(account_id, branch_id, amount, action, transaction_date, processed_by)
-    VALUES(account_id, branch_id, amount, action, CURRENT_TIMESTAMP, 'SYSTEM');
+    VALUES(p_account_id, p_branch_id, p_amount, p_action, CURRENT_TIMESTAMP, 'SYSTEM');
     
     -- Update account balance
-    IF action = 'Deposit' THEN
-        UPDATE accounts SET current_balance = current_balance + amount WHERE account_id = account_id;
-    ELSIF action = 'Withdraw' THEN
-        UPDATE accounts SET current_balance = current_balance - amount WHERE account_id = account_id;
+    IF p_action = 'Deposit' THEN
+        UPDATE accounts SET current_balance = current_balance + p_amount WHERE account_id = p_account_id;
+    ELSIF p_action = 'Withdraw' THEN
+        UPDATE accounts SET current_balance = current_balance - p_amount WHERE account_id = p_account_id;
     END IF;
 END;
 $$;

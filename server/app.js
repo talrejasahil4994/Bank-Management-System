@@ -14,14 +14,38 @@ const pool = require('./database.js');
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Simple health check endpoint (no database required)
+app.get('/ping', (req, res) => {
     res.status(200).json({
         status: 'OK',
+        message: 'Server is running',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        database: 'connected'
+        environment: process.env.NODE_ENV || 'development'
     });
+});
+
+// Health check endpoint with database test
+app.get('/health', async (req, res) => {
+    try {
+        // Test database connection
+        const result = await pool.query('SELECT NOW() as current_time');
+        res.status(200).json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development',
+            database: 'connected',
+            db_time: result.rows[0].current_time
+        });
+    } catch (err) {
+        console.error('Health check database error:', err);
+        res.status(503).json({
+            status: 'ERROR',
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development',
+            database: 'disconnected',
+            error: err.message
+        });
+    }
 });
 
 // Debug endpoint to test database connection and tables
@@ -525,7 +549,7 @@ app.post('/transaction',async(req,res)=>{
 app.get('/transaction/:customer_id',async(req,res)=>{
     try {
         const {customer_id} =req.params;
-        const query = await pool.query('select transaction.*,accounts.customer_id from transaction left join accounts on accounts.account_id=transaction.account_id where accounts.customer_id=cast($1 as integer)',[customer_id]);
+        const query = await pool.query('select "transaction".*,accounts.customer_id from "transaction" left join accounts on accounts.account_id="transaction".account_id where accounts.customer_id=cast($1 as integer)',[customer_id]);
         console.log(`Found ${query.rows.length} transactions for customer ${customer_id}`);
         res.status(200).json({ success: true, transactions: query.rows, customer_id: parseInt(customer_id) });
     } catch (error) {
@@ -647,11 +671,45 @@ app.get('/customer/:username',async(req,res)=>{
     }
 });
 
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit the process in production
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit the process in production
+});
+
 // Server startup
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+
+const server = app.listen(PORT, (err) => {
+    if (err) {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
+    
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📍 Server URL: http://localhost:${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`💾 Database: ${process.env.DATABASE_URL ? 'Connected via DATABASE_URL' : 'Using individual DB variables'}`);
+    console.log(`✅ Bank Management System API is ready!`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+        console.log('Process terminated');
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(() => {
+        console.log('Process terminated');
+    });
 });
 

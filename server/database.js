@@ -35,7 +35,18 @@ const pool = new Pool({
 // Connection error handling
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err);
-    process.exit(-1);
+    // Don't exit the process immediately, just log the error
+    // process.exit(-1);
+});
+
+// Test the connection on startup
+pool.connect((err, client, done) => {
+    if (err) {
+        console.error('Error connecting to database on startup:', err);
+    } else {
+        console.log('Database connection test successful');
+        done();
+    }
 });
 
 // Log connection details
