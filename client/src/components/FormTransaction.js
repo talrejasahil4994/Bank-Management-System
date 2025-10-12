@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const FormTransaction = () => {
   const [account_id, SetAccid] = useState("");
@@ -45,7 +46,7 @@ const FormTransaction = () => {
     
     try {
       const body = { account_id, branch_id, amount, action };
-      const res = await fetch("http://localhost:5000/transaction", {
+      const res = await fetch(getApiUrl(API_ENDPOINTS.TRANSACTIONS), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

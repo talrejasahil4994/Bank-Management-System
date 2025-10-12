@@ -1,13 +1,14 @@
 import React, { useState, useEffect} from 'react';
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const DisplayBranch = () =>{
     const [AllBranches,setBranches] = useState([]);
     const { toast, showToast } = useToast();
     const GetBranches = async() =>{
         try {
-            const query = await fetch('http://localhost:5000/Branch',{
+            const query = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES),{
                 method : 'GET'
             });
             const data = await query.json();

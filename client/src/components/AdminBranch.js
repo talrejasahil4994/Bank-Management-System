@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback} from 'react';
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const PostBranch = ()=>{
     const [AllBranch,setBranch] = useState([]);
@@ -26,7 +27,7 @@ const PostBranch = ()=>{
     const { toast, showToast, showInfo, showSuccess, showError } = useToast();
     const DeleteBranch = async(branch_id) =>{
         try {
-          const response = await fetch(`http://localhost:5000/branch/${branch_id}`,{
+          const response = await fetch(getApiUrl(`branch/${branch_id}`),{
               method : 'DELETE'
           });
           
@@ -45,7 +46,7 @@ const PostBranch = ()=>{
       e.preventDefault();
       try {
         const body = {name,house_no,city,zip_code};
-        const response = await fetch('http://localhost:5000/branch',{
+        const response = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES),{
           method : 'POST',
           headers : {'Content-Type' : 'application/json'},
           body : JSON.stringify(body)
@@ -108,7 +109,7 @@ const PostBranch = ()=>{
                 zip_code: editZipCode
             };
             
-            const response = await fetch(`http://localhost:5000/branch/${editingBranch}`, {
+            const response = await fetch(getApiUrl(`branch/${editingBranch}`), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -135,7 +136,7 @@ const PostBranch = ()=>{
           showInfo('🔄 Refreshing branch data...');
         }
         
-        const query = await fetch('http://localhost:5000/branch');
+        const query = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES));
         const data =await query.json();
         setBranch(data);
         setFilteredBranches(data);

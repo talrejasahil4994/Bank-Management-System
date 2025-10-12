@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback} from 'react';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const PostCustomer = ()=>{
     const [AllCustomers,setCustomers] = useState([]);
@@ -84,7 +85,7 @@ const PostCustomer = ()=>{
                 zipcode: editZipcode
             };
             
-            const response = await fetch(`http://localhost:5000/customer/${editingCustomer}`, {
+            const response = await fetch(getApiUrl(`customer/${editingCustomer}`), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -107,7 +108,7 @@ const PostCustomer = ()=>{
     const DeleteCustomer = async(customer_id)=>{
       if (window.confirm('Are you sure you want to delete this customer?')) {
         try {
-          const response = await fetch(`http://localhost:5000/customer/${customer_id}`,{
+          const response = await fetch(getApiUrl(`customer/${customer_id}`),{
             method : 'DELETE'
           });
           if (response.ok) {
@@ -126,7 +127,7 @@ const PostCustomer = ()=>{
       e.preventDefault();
       try {
         const body = {name,phone,email,house_no,city,zipcode,username,password};
-        const response = await fetch('http://localhost:5000/customer',{
+        const response = await fetch(getApiUrl(API_ENDPOINTS.CUSTOMERS),{
           method : 'POST',
           headers : {'Content-Type' : 'application/json'},
           body : JSON.stringify(body)
@@ -158,7 +159,7 @@ const PostCustomer = ()=>{
       e.preventDefault();
       try {
         const body = { customer_id: selectedCustomerId, current_balance: initialBalance };
-        const response = await fetch('http://localhost:5000/accounts', {
+        const response = await fetch(getApiUrl(API_ENDPOINTS.ACCOUNTS), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -183,7 +184,7 @@ const PostCustomer = ()=>{
             showToast('Refreshing customer data...', 'info');
         }
         
-        const get_cust = await fetch('http://localhost:5000/customer');
+        const get_cust = await fetch(getApiUrl(API_ENDPOINTS.CUSTOMERS));
         const data =await get_cust.json();
         setCustomers(data);
         setFilteredCustomers(data);

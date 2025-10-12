@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 const PostEmployee = () => {
   const [AllEmployee, setEmployees] = useState([]);
@@ -25,7 +26,7 @@ const PostEmployee = () => {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/employee/${username}`, {
+        const response = await fetch(getApiUrl(`employee/${username}`), {
             method: "DELETE"
         });
         
@@ -86,7 +87,7 @@ const PostEmployee = () => {
         email: editEmail
       };
       
-      const response = await fetch(`http://localhost:5000/employee/${editingEmployee}`, {
+      const response = await fetch(getApiUrl(`employee/${editingEmployee}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -117,7 +118,7 @@ const PostEmployee = () => {
     
     try {
       const body = { username, user_password, full_name, email };
-      const response = await fetch('http://localhost:5000/employee', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.EMPLOYEES), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -154,7 +155,7 @@ const PostEmployee = () => {
         setTimeout(() => setSuccess(''), 2000);
       }
       
-      const query = await fetch('http://localhost:5000/employee');
+      const query = await fetch(getApiUrl(API_ENDPOINTS.EMPLOYEES));
       const data =await query.json();
       setEmployees(data);
       setFilteredEmployees(data);

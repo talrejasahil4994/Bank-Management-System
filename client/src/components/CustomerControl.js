@@ -4,6 +4,7 @@ import avatar from '../images/avatar.png';
 import Toast from './Toast';
 import useToast from '../hooks/useToast';
 import BackButton from './BackButton';
+import { getApiUrl, API_ENDPOINTS } from '../utils/api';
 
 
 const CustomerControl = () => {
@@ -58,7 +59,7 @@ const CustomerControl = () => {
         showInfo('Deleting account...', 2000);
         
         try {
-            const response = await fetch(`http://localhost:5000/accounts/${account_id}`, {
+            const response = await fetch(getApiUrl(`accounts/${account_id}`), {
                 method: 'DELETE'
             });
             
@@ -88,7 +89,7 @@ const CustomerControl = () => {
         
         try {
             const body = { customer_id: id, current_balance };
-            const response = await fetch('http://localhost:5000/accounts', {
+            const response = await fetch(getApiUrl(API_ENDPOINTS.ACCOUNTS), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -124,7 +125,7 @@ const CustomerControl = () => {
     };
     const GetAccountDetails = async(showToastMessage = true) => {
         try {
-            const response = await fetch(`http://localhost:5000/accounts/${id}`);
+            const response = await fetch(getApiUrl(API_ENDPOINTS.ACCOUNTS_BY_CUSTOMER(id)));
             const data = await response.json();
             setAccounts(data);
             
@@ -149,7 +150,7 @@ const CustomerControl = () => {
             if (showToastMessage) {
                 showInfo('Loading transaction history...', 1000);
             }
-            const response = await fetch(`http://localhost:5000/transaction/${id}`);
+            const response = await fetch(getApiUrl(API_ENDPOINTS.TRANSACTIONS_BY_CUSTOMER(id)));
             const data = await response.json();
             SetTransaction(data);
             if (showToastMessage) {
