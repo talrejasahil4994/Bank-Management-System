@@ -185,17 +185,21 @@ const PostCustomer = ()=>{
         }
         
         const get_cust = await fetch(getApiUrl(API_ENDPOINTS.CUSTOMERS));
-        const data =await get_cust.json();
-        setCustomers(data);
-        setFilteredCustomers(data);
+        const response =await get_cust.json();
+        
+        // Handle new API response format
+        const customers = response.success ? response.customers : response;
+        setCustomers(customers);
+        setFilteredCustomers(customers);
         
         if (showLoading) {
-            showToast(`Successfully loaded ${data.length} customers!`, 'success');
+            showToast(`Successfully loaded ${customers.length} customers!`, 'success');
         }
         
-        console.log(data);
+        console.log('API Response:', response);
+        console.log('Customers:', customers);
     } catch (error) {
-        console.log(error);
+        console.error('Get customers error:', error);
         if (showLoading) {
             showToast('Failed to load customers. Please try again.', 'error');
         }

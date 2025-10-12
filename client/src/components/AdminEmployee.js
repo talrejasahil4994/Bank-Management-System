@@ -156,18 +156,22 @@ const PostEmployee = () => {
       }
       
       const query = await fetch(getApiUrl(API_ENDPOINTS.EMPLOYEES));
-      const data =await query.json();
-      setEmployees(data);
-      setFilteredEmployees(data);
+      const response =await query.json();
+      
+      // Handle new API response format
+      const employees = response.success ? response.employees : response;
+      setEmployees(employees);
+      setFilteredEmployees(employees);
       
       if (showLoading) {
-        setSuccess(`✅ Successfully loaded ${data.length} employees!`);
+        setSuccess(`✅ Successfully loaded ${employees.length} employees!`);
         setTimeout(() => setSuccess(''), 3000);
       }
       
-      console.log(data);
+      console.log('API Response:', response);
+      console.log('Employees:', employees);
     } catch (error) {
-      console.log(error);
+      console.error('Get employees error:', error);
       if (showLoading) {
         setError('❌ Failed to load employees. Please try again.');
         setTimeout(() => setError(''), 4000);

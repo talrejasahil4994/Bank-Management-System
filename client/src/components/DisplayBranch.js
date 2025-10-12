@@ -11,11 +11,17 @@ const DisplayBranch = () =>{
             const query = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES),{
                 method : 'GET'
             });
-            const data = await query.json();
-            setBranches(data);
+            const response = await query.json();
+            
+            // Handle new API response format
+            const branches = response.success ? response.branches : response;
+            setBranches(branches);
+            
+            console.log('API Response:', response);
+            console.log('Branches:', branches);
         } catch (error) {
             showToast('Failed to load branches', 'error');
-            console.log(error.message);
+            console.error('Get branches error:', error);
         }
     };
     useEffect(()=>{

@@ -137,17 +137,21 @@ const PostBranch = ()=>{
         }
         
         const query = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES));
-        const data =await query.json();
-        setBranch(data);
-        setFilteredBranches(data);
+        const response =await query.json();
+        
+        // Handle new API response format
+        const branches = response.success ? response.branches : response;
+        setBranch(branches);
+        setFilteredBranches(branches);
         
         if (showLoading) {
-          showSuccess(`✅ Successfully loaded ${data.length} branches!`);
+          showSuccess(`✅ Successfully loaded ${branches.length} branches!`);
         }
         
-        console.log(data);
+        console.log('API Response:', response);
+        console.log('Branches:', branches);
     } catch (error) {
-        console.log(error);
+        console.error('Get branches error:', error);
         if (showLoading) {
           showError('❌ Failed to load branches. Please try again.');
         }

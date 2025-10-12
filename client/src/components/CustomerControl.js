@@ -126,12 +126,18 @@ const CustomerControl = () => {
     const GetAccountDetails = async(showToastMessage = true) => {
         try {
             const response = await fetch(getApiUrl(API_ENDPOINTS.ACCOUNTS_BY_CUSTOMER(id)));
-            const data = await response.json();
-            setAccounts(data);
+            const responseData = await response.json();
+            
+            // Handle new API response format
+            const accounts = responseData.success ? responseData.accounts : responseData;
+            setAccounts(accounts);
+            
+            console.log('Accounts API Response:', responseData);
+            console.log('Accounts:', accounts);
             
             if (showToastMessage) {
-                if (data.length > 0) {
-                    showSuccess(`Loaded ${data.length} account(s) successfully!`, 2000);
+                if (accounts.length > 0) {
+                    showSuccess(`Loaded ${accounts.length} account(s) successfully!`, 2000);
                 } else {
                     showInfo('No accounts found. Create your first account!', 2000);
                 }
@@ -151,10 +157,17 @@ const CustomerControl = () => {
                 showInfo('Loading transaction history...', 1000);
             }
             const response = await fetch(getApiUrl(API_ENDPOINTS.TRANSACTIONS_BY_CUSTOMER(id)));
-            const data = await response.json();
-            SetTransaction(data);
+            const responseData = await response.json();
+            
+            // Handle new API response format
+            const transactions = responseData.success ? responseData.transactions : responseData;
+            SetTransaction(transactions);
+            
+            console.log('Transactions API Response:', responseData);
+            console.log('Transactions:', transactions);
+            
             if (showToastMessage) {
-                showSuccess(`Loaded ${data.length} transaction(s) successfully!`);
+                showSuccess(`Loaded ${transactions.length} transaction(s) successfully!`);
             }
         } catch (error) {
             console.error('Get transactions error:', error);

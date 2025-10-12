@@ -131,10 +131,16 @@ app.post('/customer', async(req,res)=>{
 app.delete('/customer/:customer_id',async(req,res)=>{
     try {
         const {customer_id} = req.params;
-        const query = await pool.query('delete from customer where customer_id=cast($1 as integer)',[customer_id]);
-        res.send(query.rows);
+        const query = await pool.query('delete from customer where customer_id=cast($1 as integer) returning *',[customer_id]);
+        
+        if (query.rows.length > 0) {
+            res.status(200).json({ success: true, message: 'Customer deleted successfully', deleted_customer: query.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Customer not found' });
+        }
     } catch (error) {
-        console.log(error);
+        console.error('Delete customer error:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete customer', error: error.message });
     }
 });
 
@@ -153,10 +159,10 @@ app.post('/manager', async(req,res)=>{
 app.get('/manager',async(req,res)=>{
     try {
         const query = await pool.query('SELECT manager_id, username, full_name, email, created_at FROM manager_login');
-        res.json(query.rows);
+        res.status(200).json({ success: true, managers: query.rows });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ success: false, message: 'Failed to get managers' });
+        console.error('Get managers error:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to get managers', error: err.message });
     }
 });
 
@@ -207,28 +213,36 @@ app.post('/accounts',async(req,res)=>{
 app.delete('/accounts/:account_id',async(req,res)=>{
     try {
         const {account_id} = req.params;
-        const query = await pool.query('delete from accounts where account_id=cast($1 as integer)',[account_id]);
-        res.send(query.rows);
+        const query = await pool.query('delete from accounts where account_id=cast($1 as integer) returning *',[account_id]);
+        
+        if (query.rows.length > 0) {
+            res.status(200).json({ success: true, message: 'Account deleted successfully', deleted_account: query.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Account not found' });
+        }
     } catch (error) {
-        console.log(error);
+        console.error('Delete account error:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete account', error: error.message });
     }
 });
 app.get('/accounts',async(req,res)=>{
     try {
         const query = await pool.query('select * from accounts');
-        res.json(query.rows);
+        res.status(200).json({ success: true, accounts: query.rows });
     } catch (error) {
-        console.log(error);
+        console.error('Get accounts error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get accounts', error: error.message });
     }
 });
 app.get('/accounts/:customer_id', async(req,res)=>{
     try {
         const {customer_id}= req.params;
         const query = await pool.query('select account_id,date_opened,current_balance from accounts where customer_id=$1',[customer_id]);
-        console.log(query.rows);
-        res.json(query.rows);
+        console.log(`Found ${query.rows.length} accounts for customer ${customer_id}`);
+        res.status(200).json({ success: true, accounts: query.rows, customer_id: parseInt(customer_id) });
     } catch (error) {
-        console.log(error);
+        console.error('Get customer accounts error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get customer accounts', error: error.message });
     }
 });
 app.post('/branch',async(req,res)=>{
@@ -245,11 +259,17 @@ app.post('/branch',async(req,res)=>{
 app.delete('/branch/:branch_id',async(req,res)=>{
     try {
         const {branch_id} = req.params;
-        const query = await pool.query('delete from branch where branch_id=cast($1 as integer)',[branch_id]);
-        res.send(query.rows);
-        console.log('Deleted from branch..');
+        const query = await pool.query('delete from branch where branch_id=cast($1 as integer) returning *',[branch_id]);
+        
+        if (query.rows.length > 0) {
+            console.log('Branch deleted successfully');
+            res.status(200).json({ success: true, message: 'Branch deleted successfully', deleted_branch: query.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Branch not found' });
+        }
     } catch (error) {
-        console.log(error);
+        console.error('Delete branch error:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete branch', error: error.message });
     }
 });
 app.post('/transaction',async(req,res)=>{
@@ -282,10 +302,11 @@ app.get('/transaction/:customer_id',async(req,res)=>{
     try {
         const {customer_id} =req.params;
         const query = await pool.query('select transaction.*,accounts.customer_id from transaction left join accounts on accounts.account_id=transaction.account_id where accounts.customer_id=cast($1 as integer)',[customer_id]);
-        console.log(query.rows);
-        res.send(query.rows);
+        console.log(`Found ${query.rows.length} transactions for customer ${customer_id}`);
+        res.status(200).json({ success: true, transactions: query.rows, customer_id: parseInt(customer_id) });
     } catch (error) {
-        console.log(error);
+        console.error('Get customer transactions error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get customer transactions', error: error.message });
     }
 });
 //get
@@ -293,26 +314,28 @@ app.get('/transaction/:customer_id',async(req,res)=>{
 app.get('/customer',async(req,res)=>{
     try {
         const query = await pool.query('select customer_id,name,phone,email,house_no,city,zipcode,username from customer');
-        res.json(query.rows);
+        res.status(200).json({ success: true, customers: query.rows });
     } catch (err) {
-        console.error(err.message);
+        console.error('Get customers error:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to get customers', error: err.message });
     }
 });
 app.get('/employee',async(req,res)=>{
     try {
         const query = await pool.query('SELECT emp_id, username, full_name, email, created_at FROM emp_login');
-        res.json(query.rows);
+        res.status(200).json({ success: true, employees: query.rows });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ success: false, message: 'Failed to get employees' });
+        console.error('Get employees error:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to get employees', error: err.message });
     }
 });
 app.get('/branch',async(req,res)=>{
     try {
         const query = await pool.query('select * from branch');
-        res.json(query.rows);
+        res.status(200).json({ success: true, branches: query.rows });
     } catch (err) {
-        console.error(err.message);
+        console.error('Get branches error:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to get branches', error: err.message });
     }
 });
 
@@ -385,13 +408,18 @@ app.put('/branch/:branch_id', async(req,res)=>{
 app.get('/customer/:username',async(req,res)=>{
     try {
         const username = req.params.username;
-        console.log(username);
+        console.log(`Looking for customer with username: ${username}`);
         const query = await pool.query('select * from customer where username=$1',[username]);
-        console.log(query.rows);
-        res.json(query.rows[0]);
-
+        
+        if (query.rows.length > 0) {
+            console.log('Customer found');
+            res.status(200).json({ success: true, customer: query.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Customer not found' });
+        }
     } catch (error) {
-        console.log(error);
+        console.error('Get customer by username error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get customer', error: error.message });
     }
 });
 
