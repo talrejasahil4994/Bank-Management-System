@@ -15,7 +15,7 @@ if (process.env.DATABASE_URL) {
     // Fallback to individual environment variables
     config = {
         user: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD || 'sahilboy9565',
+        password: process.env.DB_PASSWORD || '',
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5433,
         database: process.env.DB_NAME || 'BANK',

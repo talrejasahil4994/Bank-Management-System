@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
-import { getApiUrl, API_ENDPOINTS } from '../utils/api';
+import { getApiUrl, API_ENDPOINTS, makeApiRequest } from '../utils/api';
 
 const FormTransaction = () => {
   const [account_id, SetAccid] = useState("");
@@ -32,6 +32,12 @@ const FormTransaction = () => {
     const action = document.getElementById("inputState").value;
     
     // Validate inputs
+    if (!account_id) {
+      showToast("Account ID is missing. Please return to customer panel and try again.", "error");
+      setLoading(false);
+      return;
+    }
+    
     if (!branch_id || !amount || !action) {
       showToast("Please fill all fields", "error");
       setLoading(false);
@@ -44,17 +50,18 @@ const FormTransaction = () => {
       return;
     }
     
+    console.log('Submitting transaction:', { account_id, branch_id, amount, action });
+    
     try {
       const body = { account_id, branch_id, amount, action };
-      const res = await fetch(getApiUrl(API_ENDPOINTS.TRANSACTIONS), {
+      
+      // Use the improved API request helper
+      const data = await makeApiRequest(API_ENDPOINTS.TRANSACTIONS, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
       
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
+      if (data.success) {
         showToast(`Success! ${data.message}`, "success");
         // Clear form on success
         SetBrid("");
@@ -65,7 +72,20 @@ const FormTransaction = () => {
       }
     } catch (error) {
       console.error('Transaction error:', error);
-      showToast('Network error. Please try again.', 'error');
+      
+      let errorMessage = 'Network error. Please try again.';
+      
+      if (error.message.includes('404')) {
+        errorMessage = 'Account or Branch not found. Please check your inputs.';
+      } else if (error.message.includes('400')) {
+        errorMessage = 'Invalid transaction data. Please check all fields.';
+      } else if (error.message.includes('500')) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Cannot connect to server. Please check your internet connection.';
+      }
+      
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

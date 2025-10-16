@@ -10,9 +10,33 @@ const app = express();
 const cors = require('cors');
 const pool = require('./database.js');
 
+// Enhanced CORS configuration for production
+const corsOptions = {
+    origin: [
+        'http://localhost:3000',
+        'https://bank-management-system-ivbu.onrender.com',
+        'https://*.onrender.com',
+        // Add your frontend URL here
+        process.env.FRONTEND_URL || 'http://localhost:3000'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    optionsSuccessStatus: 200
+};
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    console.log('Origin:', req.headers.origin);
+    console.log('User-Agent:', req.headers['user-agent']);
+    next();
+});
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Simple health check endpoint (no database required)
 app.get('/ping', (req, res) => {
@@ -110,13 +134,32 @@ app.get('/debug/tables', async (req, res) => {
     }
 });
 
+// Troubleshooting endpoint
+app.get('/api-test', (req, res) => {
+    res.json({
+        success: true,
+        message: 'API is working correctly',
+        timestamp: new Date().toISOString(),
+        requestInfo: {
+            method: req.method,
+            path: req.path,
+            origin: req.headers.origin,
+            userAgent: req.headers['user-agent'],
+            contentType: req.headers['content-type']
+        },
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
         message: 'Bank Management System API',
         version: '1.0.0',
+        status: 'online',
         endpoints: {
             health: '/health',
+            apiTest: '/api-test',
             customers: '/customer',
             employees: '/employee',
             managers: '/manager',
@@ -482,20 +525,39 @@ app.delete('/branch/:branch_id',async(req,res)=>{
 });
 app.post('/transaction',async(req,res)=>{
     try {
-        console.log(req.body);
+        console.log('Transaction request received:', req.body);
+        console.log('Request headers:', req.headers);
+        
         const {account_id,branch_id,amount,action} = req.body;
         
         // Validate inputs
         if (!account_id || !branch_id || !amount || !action) {
+            console.log('Validation failed - missing fields:', { account_id, branch_id, amount, action });
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
         
         if (parseFloat(amount) <= 0) {
+            console.log('Validation failed - invalid amount:', amount);
             return res.status(400).json({ success: false, message: 'Amount must be greater than 0' });
         }
         
         if (!['Deposit', 'Withdraw'].includes(action)) {
+            console.log('Validation failed - invalid action:', action);
             return res.status(400).json({ success: false, message: 'Invalid action. Must be Deposit or Withdraw' });
+        }
+        
+        // Check if account exists
+        const accountCheck = await pool.query('SELECT * FROM accounts WHERE account_id = $1', [account_id]);
+        if (accountCheck.rows.length === 0) {
+            console.log('Account not found:', account_id);
+            return res.status(404).json({ success: false, message: 'Account not found' });
+        }
+        
+        // Check if branch exists
+        const branchCheck = await pool.query('SELECT * FROM branch WHERE branch_id = $1', [branch_id]);
+        if (branchCheck.rows.length === 0) {
+            console.log('Branch not found:', branch_id);
+            return res.status(404).json({ success: false, message: 'Branch not found' });
         }
         
         let query;
@@ -541,8 +603,32 @@ app.post('/transaction',async(req,res)=>{
             transaction: query.rows?.[0] || { account_id, branch_id, amount, action }
         });
     } catch (error) {
-        console.error('Transaction error:', error);
-        res.status(500).json({ success: false, message: 'Transaction failed', error: error.message });
+        console.error('Transaction error details:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            detail: error.detail
+        });
+        
+        let errorMessage = 'Transaction failed';
+        let statusCode = 500;
+        
+        if (error.code === '23503') {
+            errorMessage = 'Invalid account or branch reference';
+            statusCode = 400;
+        } else if (error.code === '23514') {
+            errorMessage = 'Transaction violates database constraints';
+            statusCode = 400;
+        } else if (error.message.includes('insufficient funds')) {
+            errorMessage = 'Insufficient funds for withdrawal';
+            statusCode = 400;
+        }
+        
+        res.status(statusCode).json({ 
+            success: false, 
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 });
 

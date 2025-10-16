@@ -510,10 +510,15 @@ const CustomerControl = () => {
     </div>
   </div>
             <div className="account-actions d-flex flex-column flex-sm-row">
-              <form action='http://localhost:3000/customer/transaction' method='GET' className="mb-2 mb-sm-0 mr-sm-3">
-                <input type="hidden" name="account_no" value={account.account_id} />
-                <button className='btn btn-info' type='submit'>Transaction</button>
-              </form>
+              <button 
+                className='btn btn-info mb-2 mb-sm-0 mr-sm-3' 
+                onClick={() => {
+                  // Navigate to transaction page with account_no parameter
+                  history.push(`/customer/transaction?account_no=${account.account_id}`);
+                }}
+              >
+                Transaction
+              </button>
               <button className='btn btn-danger' onClick={()=>DeleteAccount(account.account_id)}>Delete</button>
             </div>
           </div>

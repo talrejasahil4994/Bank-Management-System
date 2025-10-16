@@ -25,7 +25,11 @@ const PostBranch = ()=>{
     
     // Toast integration
     const { toast, showToast, showInfo, showSuccess, showError } = useToast();
-    const DeleteBranch = async(branch_id) =>{
+    const DeleteBranch = async(branch_id, e) =>{
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         try {
           const response = await fetch(getApiUrl(`branch/${branch_id}`),{
               method : 'DELETE'
@@ -54,11 +58,20 @@ const PostBranch = ()=>{
         
         if (response.ok) {
             showToast('Branch added successfully', 'success');
+            // Clear form
             setName('');
             setHouse('');
             setCity('');
             setZipCode('');
-            GetBranches(false);
+            // Close the collapse form
+            const collapseElement = document.getElementById('collapseExample');
+            if (collapseElement && window.$) {
+                window.$('#collapseExample').collapse('hide');
+            }
+            // Reload the page to refresh data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Small delay to show the success toast
         } else {
             showToast('Failed to add branch', 'error');
         }
@@ -92,7 +105,11 @@ const PostBranch = ()=>{
         setEditZipCode(branch.zip_code);
     };
     
-    const cancelEdit = () => {
+    const cancelEdit = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         setEditingBranch(null);
         setEditName('');
         setEditHouse('');
@@ -100,7 +117,11 @@ const PostBranch = ()=>{
         setEditZipCode('');
     };
     
-    const saveEdit = async () => {
+    const saveEdit = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         try {
             const body = {
                 name: editName,
@@ -266,6 +287,26 @@ const PostBranch = ()=>{
                             <button type="submit" className="btn btn-primary btn-lg" style={{minWidth: '120px'}}>
                                 Add Branch
                             </button>
+                            <button 
+                                type="button" 
+                                className="btn btn-secondary btn-lg ml-2" 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    // Close the collapse
+                                    const collapseElement = document.getElementById('collapseExample');
+                                    if (collapseElement) {
+                                        window.$('#collapseExample').collapse('hide');
+                                    }
+                                    // Clear form
+                                    setName('');
+                                    setHouse('');
+                                    setCity('');
+                                    setZipCode('');
+                                }}
+                                style={{minWidth: '120px'}}
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -404,6 +445,7 @@ const PostBranch = ()=>{
             className="btn btn-sm btn-success mb-1" 
             onClick={saveEdit}
             title="Save changes"
+            type="button"
           >
             ✓ Save
           </button>
@@ -411,6 +453,7 @@ const PostBranch = ()=>{
             className="btn btn-sm btn-secondary" 
             onClick={cancelEdit}
             title="Cancel editing"
+            type="button"
           >
             ✗ Cancel
           </button>
@@ -419,15 +462,21 @@ const PostBranch = ()=>{
         <div className="btn-group btn-group-sm">
           <button 
             className='btn btn-sm btn-outline-primary' 
-            onClick={() => startEdit(branch)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              startEdit(branch);
+            }}
             title="Edit branch"
+            type="button"
           >
             📝 Edit
           </button>
           <button 
             className = 'btn btn-sm btn-danger' 
-            onClick={()=> DeleteBranch(branch.branch_id)}
+            onClick={(e)=> DeleteBranch(branch.branch_id, e)}
             title="Delete branch"
+            type="button"
           >
             🗑️ Delete
           </button>
