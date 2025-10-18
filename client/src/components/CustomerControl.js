@@ -462,7 +462,7 @@ const CustomerControl = () => {
       <td>{t.action}</td>
       <td>{t.amount}</td>
       <td>{t.branch_id}</td>
-      <td>{t.date_of_transaction}</td></tr>
+      <td>{t.transaction_date ? (t.transaction_date.substring(0,10) + ' ' + t.transaction_date.substring(11,16)) : ''}</td></tr>
     ))}
   </tbody>
 </table>

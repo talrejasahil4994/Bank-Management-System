@@ -6,6 +6,7 @@ import { getApiUrl, API_ENDPOINTS, makeApiRequest } from '../utils/api';
 const FormTransaction = () => {
   const [account_id, SetAccid] = useState("");
   const [branch_id, SetBrid] = useState("");
+  const [branches, setBranches] = useState([]);
   const [amount, SetAmt] = useState("");
   const [loading, setLoading] = useState(false);
   
@@ -21,8 +22,22 @@ const FormTransaction = () => {
     
   };
   
+  // Load branches for dropdown
+  const LoadBranches = async () => {
+    try {
+      const res = await fetch(getApiUrl(API_ENDPOINTS.BRANCHES));
+      const data = await res.json();
+      const list = data.success ? data.branches : data;
+      setBranches(list || []);
+    } catch (e) {
+      console.error('Failed to load branches', e);
+      setBranches([]);
+    }
+  };
+
   useEffect(() => {
     GetAccountID();
+    LoadBranches();
   }, []);
   
   const DoTransaction = async (e) => {
@@ -107,17 +122,22 @@ const FormTransaction = () => {
           disabled
           required
         />
-        <label>Branch ID</label>
-        <input
-          type="number"
+        <label>Branch</label>
+        <select
           className="form-control"
-          id="branchInput"
+          id="branchSelect"
           value={branch_id}
           onChange={(e) => SetBrid(e.target.value)}
-          placeholder="Enter branch ID (e.g., 101)"
           disabled={loading}
           required
-        />
+        >
+          <option value="">Select Branch</option>
+          {branches.map(b => (
+            <option key={b.branch_id} value={b.branch_id}>
+              {b.name} (ID: {b.branch_id})
+            </option>
+          ))}
+        </select>
         <label>Amount</label>
         <input
           type="number"
