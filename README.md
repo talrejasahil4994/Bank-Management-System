@@ -112,12 +112,6 @@ Health/Debug
 ![Employee Management](demo/employee-control.png)
 ![Branch Management](demo/branch-control.png)
 
-## 🧪 Quick Checks
-```bash
-# API up
-curl -sS https://your-api.onrender.com/ping
-# Frontend is using the right API base (open browser devtools console)
-```
 
 ## 📝 Scripts
 Root shortcuts (optional):
