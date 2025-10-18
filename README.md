@@ -100,7 +100,7 @@ Health/Debug
 - Basic input validation and error handling.
 
 ## 🖼️ Demo Screenshots
-Create a `demo/` folder at the repo root and add images. Reference examples:
+
 
 ![Home](demo/home.png)
 ![Customer Dashboard](demo/customer-dashboard.png)
@@ -121,13 +121,6 @@ Root shortcuts (optional):
 npm run dev        # cd server && npm run dev
 npm start          # cd server && npm start
 ```
-
-## 🧹 Repo Hygiene
-- No Vercel/Railway/Netlify/Heroku files present. Keeping `render.yaml` for Render.
-- Add your screenshots to `demo/` to populate the gallery above.
-
-## 📄 License
-MIT (or your choice)
 
 ## 🙌 Credits
 Built by Sahil Talreja.
