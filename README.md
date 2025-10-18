@@ -5,8 +5,8 @@ Full‑stack Bank Management System built with:
 - Node.js + Express API in `server/`
 - PostgreSQL (Neon) database
 
-Live API: [API base]/ (set your link)  
-Live Frontend: [Frontend URL] (set your link)
+Live API: [[API base](https://bank-management-system-ivbu.onrender.com)]/ 
+Live Frontend: [Frontend URL] 
 
 ## 🧭 Project Structure
 ```
