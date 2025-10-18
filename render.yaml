@@ -5,13 +5,12 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: cd server && npm install
+    buildCommand: cd server && npm ci
     startCommand: cd server && npm start
+    healthCheckPath: /ping
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
     # Add your database URL and other environment variables in the Render dashboard
     
   # Client Service  

@@ -771,7 +771,7 @@ process.on('uncaughtException', (error) => {
 // Server startup
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, (err) => {
+const server = app.listen(PORT, '0.0.0.0', (err) => {
     if (err) {
         console.error('❌ Failed to start server:', err);
         process.exit(1);
