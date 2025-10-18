@@ -6,7 +6,7 @@ Full‑stack Bank Management System built with:
 - PostgreSQL (Neon) database
 
 Live API: [[API base](https://bank-management-system-ivbu.onrender.com)]/ 
-Live Frontend: [Frontend URL] 
+Live Frontend: [[Frontend URL](https://bank-management-system-1-xj5k.onrender.com)] 
 
 ## 🧭 Project Structure
 ```
