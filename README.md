@@ -1,181 +1,133 @@
-# Bank Management System - Server
+# Bank Management System (PERN)
 
-Backend API server for the Bank Management System built with Node.js, Express.js, and PostgreSQL.
+Full‑stack Bank Management System built with:
+- React (Create React App) in `client/`
+- Node.js + Express API in `server/`
+- PostgreSQL (Neon) database
 
-## 🚀 Quick Start
+Live API: [API base]/ (set your link)  
+Live Frontend: [Frontend URL] (set your link)
 
-### Prerequisites
-- Node.js (v14 or higher)
-- PostgreSQL (v12 or higher)
-- npm or yarn
-
-### Installation
-
-1. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Database Setup:**
-   - Follow instructions in `database-setup/README.md`
-   - Update database connection in `database.js`
-
-3. **Start Server:**
-   ```bash
-   # Development
-   npm run dev
-
-   # Production
-   npm start
-   ```
-
-## 📁 Project Structure
-
+## 🧭 Project Structure
 ```
-server/
-├── app.js                 # Main application file
-├── database.js           # Database connection configuration
-├── package.json          # Dependencies and scripts
-├── database-setup/       # Database setup files
-│   ├── complete_db_setup.sql
-│   ├── add_customers.sql
-│   └── README.md
-└── README.md             # This file
+.
+├── client/                          # React frontend (CRA)
+│   ├── src/components/              # UI components
+│   └── src/utils/api.js             # API helper (uses REACT_APP_API_URL)
+├── server/                          # Express API
+│   ├── app.js                       # Routes/controllers/middleware
+│   ├── database.js                  # pg Pool + env config
+│   └── database-setup/              # SQL helpers for schema/seed
+├── render.yaml                      # Render config (API)
+├── neon-db-init.sql                 # Optional seed helpers
+└── README.md                        # This file
 ```
 
-## 🔧 Configuration
+## ⚙️ Environment Variables
 
-### Database Configuration
-Update `database.js` with your PostgreSQL connection details:
-
-```javascript
-const pool = new Pool({
-  user: 'your_username',
-  host: 'localhost',
-  database: 'bank_management_system',
-  password: 'your_password',
-  port: 5432,
-});
+Server (`server/.env`)
 ```
-
-### Environment Variables (Optional)
-Create a `.env` file for environment-specific configurations:
-
-```env
-DB_USER=your_username
+# Prefer a single DATABASE_URL on Render/Neon
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DB
+# or individual variables for local dev
+DB_USER=postgres
+DB_PASSWORD=postgres
 DB_HOST=localhost
-DB_NAME=bank_management_system
-DB_PASSWORD=your_password
-DB_PORT=5432
-PORT=5000
+DB_PORT=5433
+DB_NAME=BANK
+# Optional CORS front-end origin
+FRONTEND_URL=https://your-frontend.onrender.com
+NODE_ENV=production
 ```
 
-## 🛠️ API Endpoints
-
-### Authentication
-- `POST /customer/login` - Customer login
-- `POST /employee/login` - Employee login
-- `POST /manager/login` - Manager login
-
-### Customers
-- `GET /customer` - Get all customers
-- `POST /customer` - Create new customer
-- `PUT /customer/:id` - Update customer
-- `DELETE /customer/:id` - Delete customer
-
-### Employees
-- `GET /employee` - Get all employees
-- `POST /employee` - Create new employee
-- `PUT /employee/:id` - Update employee
-- `DELETE /employee/:id` - Delete employee
-
-### Branches
-- `GET /branch` - Get all branches
-- `POST /branch` - Create new branch
-- `PUT /branch/:id` - Update branch
-- `DELETE /branch/:id` - Delete branch
-
-### Accounts
-- `GET /accounts/:customer_id` - Get customer accounts
-- `POST /accounts` - Create new account
-- `DELETE /accounts/:id` - Delete account
-
-### Transactions
-- `GET /transaction/:customer_id` - Get customer transactions
-- `POST /transaction` - Create new transaction
-
-## 🔒 Security Features
-
-- CORS enabled for cross-origin requests
-- SQL injection protection with parameterized queries
-- Input validation and sanitization
-- Role-based access control
-
-## 📦 Dependencies
-
-### Production Dependencies
-- `express` - Web framework
-- `pg` - PostgreSQL client
-- `cors` - Cross-origin resource sharing
-
-### Development Dependencies
-- `nodemon` - Development server with auto-reload
-
-## 🚀 Deployment
-
-### Local Deployment
-```bash
-npm start
+Client (`client/.env`)
 ```
-Server runs on `http://localhost:5000`
+REACT_APP_API_URL=https://your-api.onrender.com
+```
 
-### Production Deployment
-1. Set up PostgreSQL database
-2. Run database setup scripts
-3. Configure environment variables
-4. Install production dependencies: `npm ci --production`
-5. Start with process manager: `pm2 start app.js`
+## ▶️ Local Development
+- Terminal 1 (API)
+  ```bash
+  cd server && npm install && npm run dev
+  ```
+  Runs on http://localhost:5000
 
-## 🔍 Health Check
+- Terminal 2 (Frontend)
+  ```bash
+  cd client && npm install && npm start
+  ```
+  CRA dev server on http://localhost:3000
 
-Verify server is running:
+## 🚀 Deployment (Render)
+API (Web Service)
+- Root Directory: `server`
+- Build Command: `npm ci`
+- Start Command: `node app.js`
+- Health Check Path: `/ping`
+- Env: set `DATABASE_URL`, remove custom `PORT`
+
+Frontend (Static Site)
+- Build Command: `npm ci && npm run build`
+- Publish Directory: `client/build`
+- Set `REACT_APP_API_URL` in environment
+
+## 🔌 API Overview
+Auth
+- POST `/customer/login`
+- POST `/employee/login`
+- POST `/manager/login`
+
+Resources
+- Customers: GET `/customer`, POST `/customer`, PUT `/customer/:customer_id`, DELETE `/customer/:customer_id`
+- Employees: GET `/employee`, POST `/employee`, PUT `/employee/:emp_id`, DELETE `/employee/:username`
+- Branches: GET `/branch`, POST `/branch`, PUT `/branch/:branch_id`, DELETE `/branch/:branch_id`
+- Accounts: GET `/accounts`, GET `/accounts/:customer_id`, POST `/accounts`, DELETE `/accounts/:account_id`
+- Transactions: GET `/transaction/:customer_id`, POST `/transaction`
+
+Health/Debug
+- GET `/ping` (liveness)
+- GET `/health` (DB check)
+- GET `/debug/tables` (introspection)
+
+## 🗃️ Database Notes (Neon)
+- `server/database.js` uses `DATABASE_URL` if present; otherwise individual vars.
+- SSL is enabled for production. Ensure Neon requires SSL or set appropriately.
+- Seeding: you can use `neon-db-init.sql` or the SQL append scripts you ran.
+
+## 🔐 Security & CORS
+- CORS allows your `FRONTEND_URL` and any `*.onrender.com` origin.
+- Parameterized queries with `pg`.
+- Basic input validation and error handling.
+
+## 🖼️ Demo Screenshots
+Create a `demo/` folder at the repo root and add images. Reference examples:
+
+![Home](demo/home.png)
+![Customer Dashboard](demo/customer-dashboard.png)
+![Accounts](demo/accounts.png)
+![Transactions](demo/transactions.png)
+![Admin Branches](demo/admin-branches.png)
+
+## 🧪 Quick Checks
 ```bash
-curl http://localhost:5000/branch
+# API up
+curl -sS https://your-api.onrender.com/ping
+# Frontend is using the right API base (open browser devtools console)
 ```
 
 ## 📝 Scripts
+Root shortcuts (optional):
+```bash
+npm run dev        # cd server && npm run dev
+npm start          # cd server && npm start
+```
 
-- `npm start` - Start production server
-- `npm run dev` - Start development server with nodemon
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Error:**
-   - Verify PostgreSQL is running
-   - Check database credentials in `database.js`
-   - Ensure database exists
-
-2. **Port Already in Use:**
-   - Change port in `app.js` or set PORT environment variable
-
-3. **Module Not Found:**
-   - Run `npm install` to install dependencies
+## 🧹 Repo Hygiene
+- No Vercel/Railway/Netlify/Heroku files present. Keeping `render.yaml` for Render.
+- Add your screenshots to `demo/` to populate the gallery above.
 
 ## 📄 License
+MIT (or your choice)
 
-This project is for educational purposes.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create pull request
-
----
-
-**Server Status:** Production Ready ✅  
-**Last Updated:** October 2025
+## 🙌 Credits
+Built by Sahil Talreja.
