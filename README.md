@@ -106,7 +106,11 @@ Health/Debug
 ![Customer Dashboard](demo/customer-dashboard.png)
 ![Accounts](demo/accounts.png)
 ![Transactions](demo/transactions.png)
-![Admin Branches](demo/admin-branches.png)
+![Admin Employee](demo/admin-employee.png)
+![Admin Manager](demo/admin-branches.png)
+![Customer Management](demo/customer-control.png)
+![Employee Management](demo/employee-control.png)
+![Branch Management](demo/branch-control.png)
 
 ## 🧪 Quick Checks
 ```bash
